@@ -1,6 +1,6 @@
-import { getTableUniqueName } from 'drizzle-orm';
 import type { ResolvedPulseQuery } from '../types.js';
 import { applyColumnFilter, getQueryColumnKey } from './column-filter.js';
+import { getQualifiedTableName } from './qualified-table-name.js';
 
 // Must stay free of drizzle-orm/pg-core VALUE imports (bare `drizzle-orm` only): the embedded
 // client entrypoint value-imports projectEmbeddedRows directly, and platform-imports.test.ts
@@ -14,7 +14,7 @@ export function addPrimaryKey(row: Record<string, unknown>, pulseQuery: Resolved
   const pkValue = row[pkQueryKey];
   if (pkValue === undefined) {
     throw new Error(
-      `Primary key column "${pulseQuery.pkColumn.name}" on "${getTableUniqueName(pulseQuery.table)}" is missing`,
+      `Primary key column "${pulseQuery.pkColumn.name}" on "${getQualifiedTableName(pulseQuery.table)}" is missing`,
     );
   }
 
@@ -45,7 +45,7 @@ export function projectEmbeddedRows(
     const pk = row[pkQueryKey];
     if (pk === undefined) {
       throw new Error(
-        `Primary key column "${pulseQuery.pkColumn.name}" on "${getTableUniqueName(pulseQuery.table)}" is missing`,
+        `Primary key column "${pulseQuery.pkColumn.name}" on "${getQualifiedTableName(pulseQuery.table)}" is missing`,
       );
     }
     return { pk, row: applyColumnFilter(row, pulseQuery.selectedColumns) };

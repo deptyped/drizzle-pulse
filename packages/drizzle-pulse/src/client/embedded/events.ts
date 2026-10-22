@@ -1,8 +1,8 @@
-import { getTableUniqueName } from 'drizzle-orm';
 import type { AnyPulseBuilders } from '../../server/pulse-registry.js';
 import type { PulseRuntime } from '../../server/pulse-runtime.js';
 import type { PulseClientContract } from '../../server/pulse-types.js';
 import type { PulseEvent } from '../../shared/pulse-events.js';
+import { getQualifiedTableName } from '../../shared/qualified-table-name.js';
 import type { PulseAuthContext, QueryDescriptor } from '../../types.js';
 import { buildTapEvent, type TapRow } from './tap-events.js';
 
@@ -92,7 +92,7 @@ export function createPulseEvents<TQueries extends AnyPulseBuilders>(
         // carries the identity — so membership stays correct without leaking out-of-scope
         // column data (see tap-events.ts).
         const query = runtime.registry.resolve(prop, rawArgs, auth);
-        const tableKey = getTableUniqueName(query.table);
+        const tableKey = getQualifiedTableName(query.table);
 
         // The WAL listener processes pgoutput messages sequentially and the emitter dispatches
         // synchronously off that, so subscription-time delivery is already commit order — no

@@ -1,11 +1,10 @@
 import { describe, expect, test } from 'bun:test';
-import { getTableUniqueName } from 'drizzle-orm';
 import {
   createPulseClient,
   type PulseCollection,
   type PulseCollectionOptions,
 } from '../client/embedded/index.js';
-import { asRuntime, makeMockRuntime, ordersTable } from './mock-runtime.js';
+import { asRuntime, makeMockRuntime } from './mock-runtime.js';
 
 // ---------------------------------------------------------------------------
 // No DB required: these cover the embedded client's tap-direct handshake, the
@@ -13,7 +12,7 @@ import { asRuntime, makeMockRuntime, ordersTable } from './mock-runtime.js';
 // push behavior against Postgres is covered by the integration suite.
 // ---------------------------------------------------------------------------
 
-const tableKey = getTableUniqueName(ordersTable);
+const tableKey = 'public.orders';
 
 type TestRow = Record<string, unknown>;
 

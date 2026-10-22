@@ -6,9 +6,10 @@ import {
   type TransactionBatch,
 } from '@drizzle-team/minipg';
 import { type ReplicateHandle, replicate } from '@drizzle-team/minipg/cdc';
-import { desc, eq, getColumns, getTableUniqueName, sql } from 'drizzle-orm';
+import { desc, eq, getColumns, sql } from 'drizzle-orm';
 import { getTableConfig, type PgTable } from 'drizzle-orm/pg-core';
 import { buildShape } from 'drizzle-orm/postgres/shape';
+import { getQualifiedTableName } from '../shared/qualified-table-name.js';
 import type { ResolvedPulseQuery } from '../types.js';
 import { emitEventsTableDdl } from './events-table-ddl.js';
 import { buildEventsTable, DEFAULT_EVENTS_SCHEMA } from './events-table-resolver.js';
@@ -163,7 +164,7 @@ export class PulseRuntime<TQueries extends AnyPulseBuilders> {
   // a reconnect without a store round trip on every commit.
   private lastPersistedCommitLsn: string | null = null;
   // Source-table qualified name -> in-process (embedded) tap subscribers. Keyed by the same
-  // getTableUniqueName convention decodeInto stamps onto each PendingWalEvent.tableQualifiedName.
+  // getQualifiedTableName convention decodeInto stamps onto each PendingWalEvent.tableQualifiedName.
   private readonly tapListeners = new Map<string, Set<TapListener>>();
   private readonly reconnectListeners = new Set<ReconnectListener>();
   private readonly stopListeners = new Set<RuntimeLifecycleListener>();
@@ -192,7 +193,7 @@ export class PulseRuntime<TQueries extends AnyPulseBuilders> {
   }
 
   // In-process (embedded) subscription to a source table's decoded WAL events, keyed by the
-  // table's qualified name (getTableUniqueName — the same value the embedded modules derive from
+  // table's qualified name (getQualifiedTableName — the same value the embedded modules derive from
   // their resolved query). The WAL loop dispatches synchronously in commit order.
   subscribeTap(tableQualifiedName: string, listener: TapListener): () => void {
     let set = this.tapListeners.get(tableQualifiedName);
@@ -248,7 +249,7 @@ export class PulseRuntime<TQueries extends AnyPulseBuilders> {
       if (
         !pulseQuery ||
         !sourceTable ||
-        this.sourceTableMetadata.has(getTableUniqueName(pulseQuery.table))
+        this.sourceTableMetadata.has(getQualifiedTableName(pulseQuery.table))
       ) {
         continue;
       }
@@ -266,7 +267,7 @@ export class PulseRuntime<TQueries extends AnyPulseBuilders> {
       }
       eventsNameOrigin.set(eventsName, sourceName);
 
-      this.sourceTableMetadata.set(getTableUniqueName(pulseQuery.table), {
+      this.sourceTableMetadata.set(getQualifiedTableName(pulseQuery.table), {
         sourceTable,
         pkKey:
           getQueryColumnKey(getColumns(sourceTable), pulseQuery.pkColumn) ??
@@ -315,7 +316,7 @@ export class PulseRuntime<TQueries extends AnyPulseBuilders> {
       throw new Error(`Unknown query: "${queryName}"`);
     }
 
-    const metadata = this.sourceTableMetadata.get(getTableUniqueName(sourceTable));
+    const metadata = this.sourceTableMetadata.get(getQualifiedTableName(sourceTable));
     if (!metadata) {
       throw new Error(`No events table resolved for query "${queryName}"`);
     }
@@ -360,7 +361,7 @@ export class PulseRuntime<TQueries extends AnyPulseBuilders> {
       const pulseQuery = this.registry.getPulseQuery(queryName);
       const sourceTable = this.registry.getSourceTable(queryName);
       if (!pulseQuery || !sourceTable) continue;
-      const metadata = this.sourceTableMetadata.get(getTableUniqueName(pulseQuery.table));
+      const metadata = this.sourceTableMetadata.get(getQualifiedTableName(pulseQuery.table));
       if (!metadata) continue;
 
       await this.seedBaseline(
@@ -879,7 +880,7 @@ export class PulseRuntime<TQueries extends AnyPulseBuilders> {
           const sourceTable = this.registry.getSourceTable(queryName);
           if (!pulseQuery || !sourceTable) continue;
 
-          const metadata = this.sourceTableMetadata.get(getTableUniqueName(pulseQuery.table));
+          const metadata = this.sourceTableMetadata.get(getQualifiedTableName(pulseQuery.table));
           if (!metadata) continue;
           const eventsTable = this.getEventsTableForQuery(queryName);
           const eventsTableConfig = getTableConfig(eventsTable);

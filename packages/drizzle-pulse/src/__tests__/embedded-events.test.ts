@@ -1,8 +1,7 @@
 import { describe, expect, test } from 'bun:test';
-import { getTableUniqueName } from 'drizzle-orm';
 import { createPulseEvents, type PulseEventsOptions } from '../client/embedded/events.js';
 import type { PulseEvent } from '../shared/pulse-events.js';
-import { asRuntime, makeMockRuntime, ordersTable } from './mock-runtime.js';
+import { asRuntime, makeMockRuntime } from './mock-runtime.js';
 
 // ---------------------------------------------------------------------------
 // No DB required: createPulseEvents is synchronous and stateless — no baseline,
@@ -10,7 +9,7 @@ import { asRuntime, makeMockRuntime, ordersTable } from './mock-runtime.js';
 // covered by the integration suite.
 // ---------------------------------------------------------------------------
 
-const tableKey = getTableUniqueName(ordersTable);
+const tableKey = 'public.orders';
 
 type TestRow = Record<string, unknown>;
 type TestCallback = (event: PulseEvent<TestRow>, lsn: string) => void;

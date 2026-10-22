@@ -1,4 +1,3 @@
-import { getTableUniqueName } from 'drizzle-orm';
 import type { AnyPulseBuilders } from '../../server/pulse-registry.js';
 import type {
   BaselineSnapshot,
@@ -10,6 +9,7 @@ import { compareLsn } from '../../shared/lsn.js';
 import { projectEmbeddedRows } from '../../shared/projection.js';
 import type { PulseEvent } from '../../shared/pulse-events.js';
 import { PulseMergeCore } from '../../shared/pulse-merge-core.js';
+import { getQualifiedTableName } from '../../shared/qualified-table-name.js';
 import type { PulseAuthContext, QueryDescriptor } from '../../types.js';
 import { buildTapEvent, type TapRow } from './tap-events.js';
 
@@ -165,7 +165,7 @@ export function createPulseClient<TQueries extends AnyPulseBuilders>(
         // resolve() validates args and yields the source table + auth-scoped WHERE — the
         // same gate must scope both the baseline read and every tapped event below.
         const query = runtime.registry.resolve(prop, rawArgs, auth);
-        const tableKey = getTableUniqueName(query.table);
+        const tableKey = getQualifiedTableName(query.table);
 
         const core = new PulseMergeCore<AnyRow>({ order: query.order });
 

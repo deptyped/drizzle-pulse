@@ -19,7 +19,7 @@
     "verify:publish": "bun run build && bun run --filter drizzle-pulse verify:publish"
   },
   "catalog": {
-    "drizzle-orm": "1.0.0-rc.5-169397b",
+    "drizzle-orm": "1.0.0-rc.5",
     "@drizzle-team/minipg": "0.4.0"
   },
   "devDependencies": {

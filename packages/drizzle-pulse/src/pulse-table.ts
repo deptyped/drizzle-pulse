@@ -1,5 +1,5 @@
 import type { InferModelFromColumns, InferSelectModel } from 'drizzle-orm';
-import { getColumns, getTableUniqueName } from 'drizzle-orm';
+import { getColumns } from 'drizzle-orm';
 import { getTableConfig, type PgColumn, type PgTable } from 'drizzle-orm/pg-core';
 import type { z } from 'zod';
 import { PulseBuilder } from './server/pulse-builder.js';
@@ -9,6 +9,7 @@ import type {
   PulseQueryContext,
   QueryFn,
 } from './server/pulse-types.js';
+import { getQualifiedTableName } from './shared/qualified-table-name.js';
 import type { WhereClause } from './types.js';
 
 const SUPPORTED_PK_SQL_TYPES = new Set([
@@ -43,17 +44,17 @@ export function getPulsePkColumn(table: PgTable): PgColumn {
 
   if (pkColumns.length === 0) {
     throw new Error(
-      `Table "${getTableUniqueName(table)}" has no primary key — declare one via .primaryKey() or primaryKey({ columns: [...] })`,
+      `Table "${getQualifiedTableName(table)}" has no primary key — declare one via .primaryKey() or primaryKey({ columns: [...] })`,
     );
   }
 
   if (pkColumns.length > 1) {
-    throw new Error(`Table "${getTableUniqueName(table)}" has multiple primary keys`);
+    throw new Error(`Table "${getQualifiedTableName(table)}" has multiple primary keys`);
   }
 
   const [pkColumn] = pkColumns;
   if (!pkColumn) {
-    throw new Error(`Table "${getTableUniqueName(table)}" has no resolvable primary key`);
+    throw new Error(`Table "${getQualifiedTableName(table)}" has no resolvable primary key`);
   }
 
   const pkSqlType = pkColumn.getSQLType().toLowerCase();
@@ -61,7 +62,7 @@ export function getPulsePkColumn(table: PgTable): PgColumn {
   const pkBaseSqlType = pkSqlType.replace(/\s*\(.*\)$/, '');
   if (!SUPPORTED_PK_SQL_TYPES.has(pkBaseSqlType)) {
     throw new Error(
-      `Table "${getTableUniqueName(table)}" primary key "${pkColumn.name}" has unsupported SQL type "${pkSqlType}". Supported types: ${Array.from(
+      `Table "${getQualifiedTableName(table)}" primary key "${pkColumn.name}" has unsupported SQL type "${pkSqlType}". Supported types: ${Array.from(
         SUPPORTED_PK_SQL_TYPES,
       ).join(', ')}`,
     );
